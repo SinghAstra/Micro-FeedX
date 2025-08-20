@@ -27,15 +27,12 @@ const LoadingFallback = () => {
           height={48}
           alt={siteConfig.name}
         />
-        <motion.p
-          className="text-5xl tracking-wide max-w-2xl text-center"
-          variants={blurInVariant}
-        >
+        <motion.p className="text-5xl tracking-wide " variants={blurInVariant}>
           {siteConfig.name}
         </motion.p>
       </div>
       <motion.p
-        className="text-xl tracking-wide text-muted-foreground"
+        className="text-xl tracking-wide text-muted-foreground max-w-2xl text-center"
         variants={blurInVariant}
       >
         {siteConfig.description}

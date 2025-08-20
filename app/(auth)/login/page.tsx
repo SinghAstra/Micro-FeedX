@@ -41,7 +41,7 @@ function LoginPage() {
           <div className="absolute inset-0 bg-muted/40 border-muted-foreground rounded-xl" />
         )}
         <Image
-          src="/assets/bg-auth.png"
+          src="/assets/bg-auth.jpg"
           alt="Auth"
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
