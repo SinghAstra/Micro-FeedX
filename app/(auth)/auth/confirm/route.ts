@@ -1,25 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
+import { type EmailOtpType } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
+  const token_hash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/home";
-  const code = searchParams.get("code");
 
-  if (code) {
+  if (token_hash && type) {
     const supabase = await createClient();
-    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
-    console.log("Verification result:", { data, error });
 
+    const { error } = await supabase.auth.verifyOtp({
+      type,
+      token_hash,
+    });
+
+    console.log("error is ", error);
     if (!error) {
       redirect(next);
-    } else {
-      console.log("Email verification error:", error);
-      redirect(`/login`);
     }
-  } else {
-    console.log("Missing required parameters:", code);
-    redirect("/login");
   }
+
+  redirect("/login");
 }

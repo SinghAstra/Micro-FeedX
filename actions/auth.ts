@@ -63,7 +63,7 @@ export async function register(
     email: email,
     password: password,
     options: {
-      emailRedirectTo: `${NEXT_PUBLIC_BASE_URL}/auth/confirm`,
+      emailRedirectTo: `${NEXT_PUBLIC_BASE_URL}/home`,
     },
   });
 
