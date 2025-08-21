@@ -13,3 +13,6 @@ export const registerSchema = z.object({
     .min(3, "Username must be at least 3 characters")
     .max(20, "Username must be less than 20 characters"),
 });
+
+export type LoginFormData = z.infer<typeof loginSchema>;
+export type RegisterFormData = z.infer<typeof registerSchema>;

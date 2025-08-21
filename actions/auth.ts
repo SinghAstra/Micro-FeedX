@@ -1,6 +1,7 @@
 "use server";
 
 import { loginSchema, registerSchema } from "@/lib/schema/auth";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -46,15 +47,15 @@ export async function register(
     return { message: "Invalid Credentials" };
   }
 
-  const { data: existingProfile } = await supabase
+  const { data: existingProfileUsername } = await supabase
     .from("profiles")
     .select("username")
     .eq("username", username)
     .single();
 
-  console.log("existingProfile is ", existingProfile);
+  console.log("existingProfileUsername is ", existingProfileUsername);
 
-  if (existingProfile) {
+  if (existingProfileUsername) {
     return { message: "Username is already taken" };
   }
 
@@ -62,7 +63,7 @@ export async function register(
     email: email,
     password: password,
     options: {
-      emailRedirectTo: `${NEXT_PUBLIC_BASE_URL}/home`,
+      emailRedirectTo: `${NEXT_PUBLIC_BASE_URL}/auth/confirm`,
     },
   });
 
@@ -70,23 +71,42 @@ export async function register(
   console.log("error is ", error);
 
   if (error) {
+    if (error.message.includes("already registered")) {
+      return { message: "Email is already taken" };
+    }
     return { message: error.message };
   }
 
   if (authData.user) {
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: authData.user.id,
-      username: username,
-    });
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .eq("id", authData.user.id)
+      .single();
 
-    console.log("profileError is ", profileError);
+    if (!existingProfile) {
+      const { error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .insert({
+          id: authData.user.id,
+          username: username,
+        });
 
-    if (profileError) {
-      return { message: "Failed to create profile" };
+      console.log("profileError is ", profileError);
+
+      if (profileError) {
+        if (profileError.code === "23505") {
+          console.log("Profile already exists, continuing...");
+        } else {
+          return { message: "Failed to create profile" };
+        }
+      }
+    } else {
+      console.log("Profile already exists, skipping creation");
     }
   }
 
-  redirect("/home");
+  return { message: "Please Check your email for confirmation link." };
 }
 
 export async function signInWithGoogle() {
