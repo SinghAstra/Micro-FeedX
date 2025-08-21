@@ -25,13 +25,17 @@ export async function getAuthData() {
 }
 
 export async function requireAuth() {
-  const authData = await getAuthData();
+  const { user, profile } = await getAuthData();
 
-  if (!authData.user) {
+  if (!user) {
     redirect("/login");
   }
 
-  return authData;
+  if (!profile) {
+    redirect("/setup-username");
+  }
+
+  return { user, profile };
 }
 
 export async function requireGuest() {

@@ -60,7 +60,7 @@ export default function UsernameForm() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
-          className="bg-input border-border text-card-foreground placeholder:text-muted-foreground"
+          className="bg-input border text-card-foreground placeholder:text-muted-foreground [&:-webkit-autofill]:bg-input [&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_hsl(var(--input))] [&:-webkit-autofill]:[-webkit-text-fill-color:hsl(var(--card-foreground))]"
         />
         <p className="text-xs text-muted-foreground">
           Your username will be visible to other users and cannot be changed

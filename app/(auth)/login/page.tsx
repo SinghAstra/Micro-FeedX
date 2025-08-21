@@ -5,6 +5,7 @@ import { Loader } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import LoginForm from "./login-form";
 
 function LoginPage() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -27,6 +28,7 @@ function LoginPage() {
               Sign in to your {siteConfig.name} account
             </p>
           </div>
+          <LoginForm />
 
           <div className="mt-4 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}

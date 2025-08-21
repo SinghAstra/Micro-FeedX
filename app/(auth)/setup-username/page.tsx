@@ -26,7 +26,7 @@ async function SetupUsernamePage() {
             Choose your username
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            Complete your profile to start using ${siteConfig.name}
+            Complete your profile to start using {siteConfig.name}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
