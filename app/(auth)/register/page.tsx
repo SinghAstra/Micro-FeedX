@@ -49,7 +49,6 @@ function RegisterPage() {
     if (result?.message) {
       setToastMessage(result.message);
     }
-    setIsGoogleLoading(false);
   };
 
   const togglePasswordVisibility = () => {
