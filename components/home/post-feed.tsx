@@ -1,10 +1,10 @@
 "use client";
 
-import { PostCard } from "@/components/home/post-card";
-import PostSkeleton from "@/components/home/post-skeleton";
-import { Post } from "@/interfaces/post";
 import { User as UserIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { Post } from "../../interfaces/post";
+import { PostCard } from "./post-card"; // Corrected import path
+import PostSkeleton from "./post-skeleton"; // Corrected import path
 
 interface PostFeedProps {
   posts: Post[];
@@ -12,6 +12,7 @@ interface PostFeedProps {
   hasMore: boolean;
   isLoadingMore: boolean;
   query: string;
+  onPostDeleted: (postId: string) => void;
 }
 
 export function PostFeed({
@@ -20,6 +21,7 @@ export function PostFeed({
   hasMore,
   isLoadingMore,
   query,
+  onPostDeleted,
 }: PostFeedProps) {
   console.log("posts.length is ", posts.length);
 
@@ -67,17 +69,11 @@ export function PostFeed({
           key={post.id}
           ref={index === posts.length - 1 ? lastPostRef : null}
         >
-          <PostCard post={post} />
+          <PostCard post={post} onPostDeleted={onPostDeleted} />
         </div>
       ))}
 
-      {isLoadingMore && (
-        <div className="space-y-4 py-8">
-          <PostSkeleton />
-          <PostSkeleton />
-          <PostSkeleton />
-        </div>
-      )}
+      {isLoadingMore && <PostSkeleton />}
 
       {!hasMore && posts.length > 0 && (
         <div className="text-center py-8 text-muted-foreground">

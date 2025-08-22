@@ -89,6 +89,11 @@ const HomeClientPage = ({
     initialHasMore,
   ]);
 
+    const handleDeletePost = useCallback((postId: string) => {
+    setPosts((prevPosts) => prevPosts.filter((post) => post.id !== postId));
+    setToastMessage("Post deleted successfully!");
+  }, [setToastMessage]);
+
   useEffect(() => {
     if (!initialMessage) return;
     setToastMessage(initialMessage);
@@ -104,6 +109,7 @@ const HomeClientPage = ({
         hasMore={hasMore}
         isLoadingMore={isLoadingMore}
         query={currentQuery}
+         onPostDeleted={handleDeletePost} 
       />
     </div>
   );

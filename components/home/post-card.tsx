@@ -23,21 +23,18 @@ import { useToastContext } from "../providers/toast";
 
 interface PostCardProps {
   post: Post;
-  onPostDeleted?: (postId: string) => void;
+  onPostDeleted: (postId: string) => void;
 }
 
 export function PostCard({ post, onPostDeleted }: PostCardProps) {
   const [likes, setLikes] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isPending, setIsPending] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { setToastMessage } = useToastContext();
 
   const handleLike = async () => {
-    // Optimistic update
     setIsLiked(!isLiked);
     setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
-    setIsPending(true);
 
     try {
       const result = await toggleLike(post.id);
@@ -57,7 +54,6 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
         console.log("error.message is ", error.message);
       }
     }
-    setIsPending(false);
   };
 
   const handleDelete = async () => {
@@ -65,7 +61,7 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
 
     try {
       await deletePost(post.id);
-      onPostDeleted?.(post.id);
+      onPostDeleted(post.id);
     } catch (error) {
       setIsDeleting(false);
       setToastMessage("Failed to delete post.");
@@ -149,7 +145,6 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
             variant="ghost"
             size="sm"
             onClick={handleLike}
-            disabled={isPending}
             className={cn(
               "h-8 px-2 gap-2 text-muted-foreground hover:text-red-500",
               isLiked && "text-red-500"
