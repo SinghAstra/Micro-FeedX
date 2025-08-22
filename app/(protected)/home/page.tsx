@@ -24,6 +24,8 @@ const HomePage = async ({ searchParams }: HomePageProps) => {
 
   try {
     const initialData = await getPosts(undefined, queryParam, 10, filterParam);
+    console.log("initialData.posts.length is ", initialData.posts?.length);
+    console.log("initialData.post is ", initialData.posts);
 
     if (initialData.posts) {
       posts = initialData.posts;

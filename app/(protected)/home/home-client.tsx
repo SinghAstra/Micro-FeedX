@@ -25,11 +25,15 @@ const HomeClientPage = ({
   initialMessage,
 }: HomeClientPageProps) => {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
+
+  console.log("posts.length is ", posts.length);
   const [cursor, setCursor] = useState<string | undefined>(initialCursor);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [currentQuery] = useState(initialQuery);
-  const [currentFilter] = useState<"all" | "me">(initialFilter);
+  const [currentQuery, setCurrentQuery] = useState(initialQuery);
+  const [currentFilter, setCurrentFilter] = useState<"all" | "me">(
+    initialFilter
+  );
 
   const { setToastMessage } = useToastContext();
 
@@ -70,6 +74,20 @@ const HomeClientPage = ({
     console.log("newPost is ", newPost);
     setPosts((prevPosts) => [newPost, ...prevPosts]);
   }, []);
+
+  useEffect(() => {
+    setCurrentQuery(initialQuery);
+    setCurrentFilter(initialFilter);
+    setPosts(initialPosts);
+    setCursor(initialCursor);
+    setHasMore(initialHasMore);
+  }, [
+    initialQuery,
+    initialFilter,
+    initialPosts,
+    initialCursor,
+    initialHasMore,
+  ]);
 
   useEffect(() => {
     if (!initialMessage) return;

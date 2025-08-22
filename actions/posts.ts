@@ -80,10 +80,17 @@ export async function getPosts(
   cursor?: string,
   query?: string,
   limit = 10,
-  filter?: "all" | "me",
-  userId?: string
+  filter?: "all" | "me"
 ) {
   const supabase = await createClient();
+  const { user } = await getAuthData();
+  if (!user) {
+    return {
+      success: false,
+      message: "Not Authenticated",
+    };
+  }
+  console.log("filter is ", filter);
 
   let queryBuilder = supabase
     .from("posts")
@@ -102,8 +109,8 @@ export async function getPosts(
     .order("created_at", { ascending: false });
 
   // Filter posts by user ID if the filter is set to "me"
-  if (filter === "me" && userId) {
-    queryBuilder = queryBuilder.eq("author_id", userId);
+  if (filter === "me") {
+    queryBuilder = queryBuilder.eq("author_id", user.id);
   }
 
   if (query && query.trim()) {
