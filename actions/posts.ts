@@ -56,6 +56,7 @@ export async function createPost(content: string) {
         ...post,
         author: { username: profile.username },
         isAuthor: true,
+        createdAt: post.created_at,
       },
     };
   } catch (error) {

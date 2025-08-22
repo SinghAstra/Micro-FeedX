@@ -1,10 +1,7 @@
-// PostFeed.tsx
 "use client";
 
-import { getPosts } from "@/actions/posts";
-import { PostCard } from "@/components/home/post-card"; // Corrected alias import
-import PostSkeleton from "@/components/home/post-skeleton"; // Corrected alias import
-import { useToastContext } from "@/components/providers/toast";
+import { PostCard } from "@/components/home/post-card";
+import PostSkeleton from "@/components/home/post-skeleton";
 import { Post } from "@/interfaces/post";
 import { User as UserIcon } from "lucide-react";
 import { useEffect, useRef } from "react";

@@ -78,7 +78,14 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const sanitizedDateString = dateString.replace(/\+00:00$/, "Z");
+
+    const date = new Date(sanitizedDateString);
+
+    if (isNaN(date.getTime())) {
+      return "Invalid Date";
+    }
+
     const now = new Date();
     const diffInHours = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60 * 60)
@@ -87,6 +94,7 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
     if (diffInHours < 1) return "Just now";
     if (diffInHours < 24) return `${diffInHours}h`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d`;
+
     return date.toLocaleDateString();
   };
 
