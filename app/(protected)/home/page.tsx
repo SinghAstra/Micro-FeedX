@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import React from "react";
 
 interface HomePageProps {
-  searchParams: Promise<{ query?: string }>;
+  searchParams: Promise<{ query?: string; filter?: "all" | "me" }>;
 }
 
 const HomePage = async ({ searchParams }: HomePageProps) => {
@@ -16,22 +16,27 @@ const HomePage = async ({ searchParams }: HomePageProps) => {
   if (!user) {
     redirect("/");
   }
-  const { query: userQuery } = await searchParams;
+
+  const { query: userQuery, filter: userFilter } = await searchParams;
   const query = userQuery || "";
-  const initialData = await getPosts(undefined, query, 10);
-  console.log("initialData is ", initialData);
+  const filter = userFilter || "all";
+
+  const initialData = await getPosts(undefined, query, 10, filter, user.id);
+
+  console.log("initialData.posts.length is ", initialData.posts?.length);
+
   return (
     <div className="min-h-screen relative flex flex-col px-4">
       <Navbar user={user} />
       <div className="max-w-2xl w-full mx-auto mt-4 flex flex-col gap-4 flex-1">
         <CreateNewPost />
-        <SearchBar initialQuery={query} />
+        <SearchBar initialQuery={query} initialFilter={filter} />
         {initialData.posts ? (
           <PostFeed
-            initialPosts={initialData.posts}
-            initialCursor={initialData.nextCursor}
-            initialHasMore={initialData.hasMore}
-            searchQuery={query}
+            posts={initialData.posts}
+            // initialCursor={initialData.nextCursor}
+            // initialHasMore={initialData.hasMore}
+            // searchQuery={query}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">

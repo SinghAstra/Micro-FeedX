@@ -21,7 +21,7 @@ export function Navbar({ user }: NavbarProps) {
   return (
     <>
       <div className="sticky w-full top-0 inset-x-0 z-50 flex items-center justify-between  p-4 sm:px-8 border-b border-dashed bg-background">
-        <Link href="/dashboard">
+        <Link href="/home">
           <span className="text-xl tracking-wider">{siteConfig.name}</span>
         </Link>
 

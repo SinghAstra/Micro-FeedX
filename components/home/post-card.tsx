@@ -2,7 +2,6 @@
 
 import { deletePost, toggleLike } from "@/actions/posts";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +18,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useToastContext } from "../providers/toast";
 
 interface PostCardProps {
@@ -30,52 +29,52 @@ interface PostCardProps {
 export function PostCard({ post, onPostDeleted }: PostCardProps) {
   const [likes, setLikes] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { setToastMessage } = useToastContext();
 
-  const handleLike = () => {
+  const handleLike = async () => {
     // Optimistic update
     setIsLiked(!isLiked);
     setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
+    setIsPending(true);
 
-    startTransition(async () => {
-      try {
-        const result = await toggleLike(post.id);
-        if (result.likes && result.isLiked) {
-          setLikes(result.likes);
-          setIsLiked(result.isLiked);
-        }
-        if (result.message) {
-          setToastMessage(result.message);
-        }
-      } catch (error) {
-        setIsLiked(isLiked);
-        setLikes(likes);
-        console.log("Failed to toggle like.");
-        if (error instanceof Error) {
-          console.log("error.stack is ", error.stack);
-          console.log("error.message is ", error.message);
-        }
+    try {
+      const result = await toggleLike(post.id);
+      if (result.likes && result.isLiked) {
+        setLikes(result.likes);
+        setIsLiked(result.isLiked);
       }
-    });
+      if (result.message) {
+        setToastMessage(result.message);
+      }
+    } catch (error) {
+      setIsLiked(isLiked);
+      setLikes(likes);
+      setToastMessage("Failed to toggle like.");
+      if (error instanceof Error) {
+        console.log("error.stack is ", error.stack);
+        console.log("error.message is ", error.message);
+      }
+    }
+    setIsPending(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setIsDeleting(true);
-    startTransition(async () => {
-      try {
-        await deletePost(post.id);
-        onPostDeleted?.(post.id);
-      } catch (error) {
-        setIsDeleting(false);
-        console.log("Failed to delete post.");
-        if (error instanceof Error) {
-          console.log("error.stack is ", error.stack);
-          console.log("error.message is ", error.message);
-        }
+
+    try {
+      await deletePost(post.id);
+      onPostDeleted?.(post.id);
+    } catch (error) {
+      setIsDeleting(false);
+      setToastMessage("Failed to delete post.");
+      if (error instanceof Error) {
+        console.log("error.stack is ", error.stack);
+        console.log("error.message is ", error.message);
       }
-    });
+    }
+    setIsDeleting(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -93,85 +92,84 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
 
   if (isDeleting) {
     return (
-      <Card className="p-4 opacity-50">
+      <div className="flex items-start gap-3 p-4 border rounded opacity-50">
         <div className="text-center text-muted-foreground">
           Deleting post...
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="p-4">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-          <User className="w-5 h-5" />
+    <div className="flex items-start gap-3 p-4 border rounded">
+      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+        <User className="w-5 h-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">
+              @{post.author.username}
+            </span>
+            <span className="text-muted-foreground text-sm">·</span>
+            <span className="text-muted-foreground text-sm">
+              {formatDate(post.createdAt)}
+            </span>
+          </div>
+          {post.isAuthor && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm">{post.author.name}</span>
-              <span className="text-muted-foreground text-sm">
-                @{post.author.username}
-              </span>
-              <span className="text-muted-foreground text-sm">·</span>
-              <span className="text-muted-foreground text-sm">
-                {formatDate(post.createdAt)}
-              </span>
-            </div>
-            {post.isAuthor && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    className="text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+        <p className="text-sm mb-3 leading-relaxed">{post.content}</p>
+        <div className="flex items-center gap-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLike}
+            disabled={isPending}
+            className={cn(
+              "h-8 px-2 gap-2 text-muted-foreground hover:text-red-500",
+              isLiked && "text-red-500"
             )}
-          </div>
-          <p className="text-sm mb-3 leading-relaxed">{post.content}</p>
-          <div className="flex items-center gap-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLike}
-              disabled={isPending}
-              className={cn(
-                "h-8 px-2 gap-2 text-muted-foreground hover:text-red-500",
-                isLiked && "text-red-500"
-              )}
-            >
-              <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
-              <span className="text-xs">{likes}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 gap-2 text-muted-foreground hover:text-blue-500"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="text-xs">Reply</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 gap-2 text-muted-foreground hover:text-green-500"
-            >
-              <Share className="w-4 h-4" />
-              <span className="text-xs">Share</span>
-            </Button>
-          </div>
+          >
+            <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
+            <span className="text-xs">{likes}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 gap-2 text-muted-foreground hover:text-blue-500"
+            disabled={true}
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span className="text-xs">Reply</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={true}
+            className="h-8 px-2 gap-2 text-muted-foreground hover:text-green-500"
+          >
+            <Share className="w-4 h-4" />
+            <span className="text-xs">Share</span>
+          </Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

@@ -1,10 +1,10 @@
 "use server";
 
-import { Post } from "@/interfaces/post";
 import { createPostSchema } from "@/lib/schema/posts";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getAuthData } from "./server-auth";
 
 export async function createPost(content: string) {
   try {
@@ -79,7 +79,13 @@ export async function createPost(content: string) {
   }
 }
 
-export async function getPosts(cursor?: string, query?: string, limit = 10) {
+export async function getPosts(
+  cursor?: string,
+  query?: string,
+  limit = 10,
+  filter?: "all" | "me",
+  userId?: string
+) {
   const supabase = await createClient();
 
   let queryBuilder = supabase
@@ -94,14 +100,17 @@ export async function getPosts(cursor?: string, query?: string, limit = 10) {
         username
       ),
       likes:likes(count)
-    `
+      `
     )
     .order("created_at", { ascending: false });
 
+  // Filter posts by user ID if the filter is set to "me"
+  if (filter === "me" && userId) {
+    queryBuilder = queryBuilder.eq("author_id", userId);
+  }
+
   if (query && query.trim()) {
-    queryBuilder = queryBuilder.or(
-      `content.ilike.%${query}%,author.username.ilike.%${query}%`
-    );
+    queryBuilder = queryBuilder.or(`content.ilike.%${query}%`);
   }
 
   if (cursor) {
@@ -178,10 +187,8 @@ export async function getPosts(cursor?: string, query?: string, limit = 10) {
 
 export async function toggleLike(postId: string) {
   const supabase = await createClient();
+  const { user, profile } = await getAuthData();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   if (!user) {
     return {
       success: false,
@@ -189,50 +196,59 @@ export async function toggleLike(postId: string) {
     };
   }
 
-  const { data: existingLike } = await supabase
+  // Attempt to delete the like first. This is an idempotent operation,
+  // meaning it can be run multiple times without causing errors.
+  const { count, error: deleteError } = await supabase
     .from("likes")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("post_id", postId)
-    .single();
+    .delete({ count: "exact" })
+    .eq("user_id", profile.id)
+    .eq("post_id", postId);
 
-  if (existingLike) {
-    const { error } = await supabase
-      .from("likes")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("post_id", postId);
+  if (deleteError) {
+    console.log("Delete error:", deleteError.message);
+    return {
+      success: false,
+      message: "Failed to unlike post",
+    };
+  }
 
-    if (error) {
-      console.log("error.message is ", error.message);
-      return {
-        success: false,
-        message: "Failed to unlike post",
-      };
-    }
-  } else {
-    const { error } = await supabase.from("likes").insert({
-      user_id: user.id,
+  let isLiked = false;
+
+  // If `count` is 0, it means the like did not exist and was not deleted.
+  // We can now safely insert a new like.
+  if (count === 0) {
+    const { error: insertError } = await supabase.from("likes").insert({
+      user_id: profile.id,
       post_id: postId,
     });
 
-    if (error) {
-      console.log("error.message is ", error.message);
+    if (insertError) {
+      console.log("Insert error:", insertError.message);
       return {
         success: false,
         message: "Failed to like post",
       };
     }
+    isLiked = true;
   }
 
-  const { data: likesData } = await supabase
+  // If count > 0, the like was successfully deleted, so isLiked remains false.
+  const { data: likesData, error: fetchError } = await supabase
     .from("likes")
-    .select("id")
+    .select("post_id")
     .eq("post_id", postId);
+
+  if (fetchError) {
+    console.log("Fetch likes error:", fetchError.message);
+    return {
+      success: false,
+      message: "Failed to retrieve like count",
+    };
+  }
 
   return {
     likes: likesData?.length || 0,
-    isLiked: !existingLike,
+    isLiked: isLiked,
   };
 }
 
