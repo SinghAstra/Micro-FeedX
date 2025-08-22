@@ -29,7 +29,6 @@ interface PostCardProps {
 export function PostCard({ post, onPostDeleted }: PostCardProps) {
   const [likes, setLikes] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(post.isLiked);
-  const [isDeleting, setIsDeleting] = useState(false);
   const { setToastMessage } = useToastContext();
 
   const handleLike = async () => {
@@ -57,20 +56,16 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
   };
 
   const handleDelete = async () => {
-    setIsDeleting(true);
-
     try {
-      await deletePost(post.id);
       onPostDeleted(post.id);
+      await deletePost(post.id);
     } catch (error) {
-      setIsDeleting(false);
       setToastMessage("Failed to delete post.");
       if (error instanceof Error) {
         console.log("error.stack is ", error.stack);
         console.log("error.message is ", error.message);
       }
     }
-    setIsDeleting(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -93,16 +88,6 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
 
     return date.toLocaleDateString();
   };
-
-  if (isDeleting) {
-    return (
-      <div className="flex items-start gap-3 p-4 border rounded opacity-50">
-        <div className="text-center text-muted-foreground">
-          Deleting post...
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-start gap-3 p-4 border rounded">
