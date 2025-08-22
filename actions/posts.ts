@@ -17,7 +17,6 @@ export async function createPost(content: string) {
       error: authError,
     } = await supabase.auth.getUser();
     console.log("authError is ", authError);
-    console.log("user is ", user);
 
     if (authError || !user) {
       return {
@@ -32,7 +31,6 @@ export async function createPost(content: string) {
       .eq("id", user.id)
       .single();
     console.log("profileError is ", profileError);
-    console.log("profile is ", profile);
     if (profileError || !profile) {
       return {
         success: false,
@@ -91,20 +89,18 @@ export async function getPosts(cursor?: string, query?: string, limit = 10) {
       id,
       content,
       created_at,
-      author:users!posts_author_id_fkey (
+      author:profiles!posts_author_id_fkey!inner (
         id,
-        username,
-        full_name
+        username
       ),
-      likes:likes(count),
-      user_likes:likes!inner(user_id)
+      likes:likes(count)
     `
     )
     .order("created_at", { ascending: false });
 
   if (query && query.trim()) {
     queryBuilder = queryBuilder.or(
-      `content.ilike.%${query}%,users.full_name.ilike.%${query}%,users.username.ilike.%${query}%`
+      `content.ilike.%${query}%,author.username.ilike.%${query}%`
     );
   }
 
@@ -138,7 +134,23 @@ export async function getPosts(cursor?: string, query?: string, limit = 10) {
     data: { user: currentUser },
   } = await supabase.auth.getUser();
 
-  const formattedPosts: Post[] = posts.map((post) => {
+  let likedPostIds = new Set();
+  if (currentUser) {
+    const { data: likesData } = await supabase
+      .from("likes")
+      .select("post_id")
+      .in(
+        "post_id",
+        posts.map((post) => post.id)
+      )
+      .eq("user_id", currentUser.id);
+
+    if (likesData) {
+      likedPostIds = new Set(likesData.map((like) => like.post_id));
+    }
+  }
+
+  const formattedPosts = posts.map((post) => {
     const authorData = Array.isArray(post.author)
       ? post.author[0]
       : post.author;
@@ -148,17 +160,12 @@ export async function getPosts(cursor?: string, query?: string, limit = 10) {
       content: post.content,
       author: {
         id: authorData?.id,
-        name: authorData?.full_name || authorData?.username,
         username: authorData?.username,
       },
       createdAt: post.created_at,
       likes: post.likes?.[0]?.count || 0,
-      isLiked:
-        post.user_likes?.some(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (like: any) => like.user_id === currentUser?.id
-        ) || false,
       isAuthor: authorData?.id === currentUser?.id,
+      isLiked: likedPostIds.has(post.id),
     };
   });
 

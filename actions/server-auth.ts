@@ -18,9 +18,6 @@ export async function getAuthData() {
     .eq("id", user.id)
     .single();
 
-  console.log("user is ", user);
-  console.log("profile is ", profile);
-
   return { user, profile };
 }
 
