@@ -1,3 +1,4 @@
+import { requireGuest } from "@/actions/server-auth";
 import { ReactNode } from "react";
 
 interface HomeLayoutProps {
@@ -5,9 +6,7 @@ interface HomeLayoutProps {
 }
 
 const HomeLayout = async ({ children }: HomeLayoutProps) => {
-  // if (user) {
-  //   redirect("/home");
-  // }
+  await requireGuest();
 
   return children;
 };

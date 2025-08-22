@@ -16,7 +16,6 @@ const HomePage = () => {
     <div>
       <Navbar />
       <Hero />
-
       <div className="min-h-screen relative px-4 sm:px-8 flex items-center">
         <motion.div
           variants={containerVariant}
@@ -58,7 +57,6 @@ const HomePage = () => {
         </motion.div>
         <ConicBackground />
       </div>
-
       <Footer />
     </div>
   );

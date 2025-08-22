@@ -36,9 +36,13 @@ export async function requireAuth() {
 }
 
 export async function requireGuest() {
-  const authData = await getAuthData();
+  const { user, profile } = await getAuthData();
 
-  if (authData.user) {
+  if (user && !profile) {
+    redirect("/setup-username");
+  }
+
+  if (user && profile) {
     redirect("/home");
   }
 }
