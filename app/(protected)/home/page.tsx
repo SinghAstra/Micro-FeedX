@@ -9,11 +9,20 @@ const HomePage = async () => {
   if (!user) {
     redirect("/");
   }
+  const query = searchParams.query || "";
+  const initialData = await getPosts(undefined, query, 10);
   return (
     <div className="min-h-screen relative flex flex-col px-4">
       <Navbar user={user} />
       <div className="max-w-2xl w-full mx-auto mt-4">
         <CreateNewPost />
+        <SearchBar initialQuery={query} />
+        <PostFeed
+          initialPosts={initialData.posts}
+          initialCursor={initialData.nextCursor}
+          initialHasMore={initialData.hasMore}
+          searchQuery={query}
+        />
       </div>
     </div>
   );
