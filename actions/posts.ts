@@ -12,26 +12,15 @@ export async function createPost(content: string) {
     const validatedData = createPostSchema.parse({ content });
 
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    console.log("authError is ", authError);
+    const { user, profile } = await getAuthData();
 
-    if (authError || !user) {
+    if (!user) {
       return {
         success: false,
         message: "Authentication required",
       };
     }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-    console.log("profileError is ", profileError);
-    if (profileError || !profile) {
+    if (!profile) {
       return {
         success: false,
         message: "User profile not found",
@@ -58,9 +47,16 @@ export async function createPost(content: string) {
 
     revalidatePath("/home");
 
+    console.log("profile is ", profile);
+
     return {
       success: true,
       data: post,
+      newPost: {
+        ...post,
+        author: { username: profile.username },
+        isAuthor: true,
+      },
     };
   } catch (error) {
     console.log("Create post error:", error);

@@ -1,15 +1,17 @@
+// CreateNewPost.tsx
 "use client";
 
-import { createPost } from "@/actions/posts";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { createPost } from "@/actions/posts"; // Reverted to alias import
+import { useToastContext } from "@/components/providers/toast"; // Reverted to alias import
+import { Button } from "@/components/ui/button"; // Reverted to alias import
+import { Textarea } from "@/components/ui/textarea"; // Reverted to alias import
+import { Post } from "@/interfaces/post"; // Reverted to alias import and added import for Post interface
+import { cn } from "@/lib/utils"; // Reverted to alias import
 import type React from "react";
 import { useRef, useState } from "react";
-import { useToastContext } from "../providers/toast";
 
 interface CreateNewPostProps {
-  onPostCreated?: () => void;
+  onPostCreated?: (newPost: Post) => void; // Callback now expects newPost
 }
 
 function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
@@ -28,18 +30,18 @@ function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
     setIsSubmitting(true);
     try {
       const result = await createPost(content.trim());
-      if (result.success) {
+      if (result.success && result.newPost) {
         setContent("");
-        onPostCreated?.();
+        onPostCreated?.(result.newPost);
       }
       if (result.message) {
         setToastMessage(result.message);
       }
     } catch (error) {
-      console.log("Error creating post.");
       if (error instanceof Error) {
-        console.log("error.stack is ", error.stack);
-        console.log("error.message is ", error.message);
+        setToastMessage(error.message);
+      } else {
+        setToastMessage("Failed to create post.");
       }
     } finally {
       setIsSubmitting(false);
@@ -49,10 +51,10 @@ function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 border py-2 px-4 bg-muted/30"
+      className="space-y-4 border py-2 px-4 bg-muted/30 rounded-lg shadow-sm"
     >
       <div className="flex justify-between items-center">
-        <p>What&apos;s up ?</p>
+        <p className="text-lg font-semibold ">What&apos;s on your mind?</p>
         <div className="flex gap-4 items-center">
           <span
             className={cn(
@@ -69,7 +71,7 @@ function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
           <Button
             type="submit"
             disabled={!content.trim() || isOverLimit || isSubmitting}
-            className="rounded"
+            className="rounded-md px-6 py-2 transition-colors duration-200 ease-in-out"
           >
             {isSubmitting ? "Posting..." : "Post"}
           </Button>
@@ -77,10 +79,10 @@ function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
       </div>
       <Textarea
         ref={textareaRef}
-        placeholder="What's happening?"
+        placeholder="Share your thoughts..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="min-h-[120px] resize-none border-0 p-0 text-lg placeholder:text-muted-foreground focus-visible:ring-0"
+        className="min-h-[120px] resize-none border-0 p-2 text-lg placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
         maxLength={MAX_CHARS + 50}
       />
     </form>
