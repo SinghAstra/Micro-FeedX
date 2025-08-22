@@ -1,7 +1,7 @@
 "use client";
 
-import { useToastContext } from "@/components/providers/toast";
-import { Dispatch, FormEvent, SetStateAction } from "react";
+import { Post } from "@/interfaces/post";
+import { Dispatch, SetStateAction } from "react";
 import Dialog from "../component-x/dialog";
 import { Button } from "../ui/button";
 import CreateNewPost from "./create-new-post";
@@ -9,14 +9,17 @@ import CreateNewPost from "./create-new-post";
 interface CreatePostDialogProps {
   showCreatePostDialog: boolean;
   setShowCreatePostDialog: Dispatch<SetStateAction<boolean>>;
+  onPostCreated: (newPost: Post) => void;
 }
 
 function CreatePostDialog({
   showCreatePostDialog,
   setShowCreatePostDialog,
+  onPostCreated,
 }: CreatePostDialogProps) {
-  const handlePostCreated = () => {
+  const handlePostCreated = (newPost: Post) => {
     setShowCreatePostDialog(false);
+    onPostCreated(newPost);
   };
 
   if (!showCreatePostDialog) return;

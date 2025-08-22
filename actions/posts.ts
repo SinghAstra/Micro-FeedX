@@ -1,6 +1,6 @@
 "use server";
 
-import { createPostSchema } from "@/lib/schema/posts";
+import { createPostSchema, editPostSchema } from "@/lib/schema/posts";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -57,6 +57,8 @@ export async function createPost(content: string) {
         author: { username: profile.username },
         isAuthor: true,
         createdAt: post.created_at,
+        likes: 0,
+        isLiked: false,
       },
     };
   } catch (error) {
@@ -280,6 +282,69 @@ export async function deletePost(postId: string) {
     return {
       success: false,
       message: "Failed to delete post",
+    };
+  }
+}
+
+export async function editPost(postId: string, newContent: string) {
+  try {
+    console.log(
+      `Attempting to edit post ${postId} with new content: ${newContent}`
+    );
+    const validatedData = editPostSchema.parse({
+      id: postId,
+      content: newContent,
+    });
+
+    const supabase = await createClient();
+    const { user } = await getAuthData();
+
+    if (!user) {
+      return {
+        success: false,
+        message: "Authentication required",
+      };
+    }
+
+    const { data, error } = await supabase
+      .from("posts")
+      .update({
+        content: validatedData.content,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", validatedData.id)
+      .eq("author_id", user.id) // Ensure only the author can edit
+      .select()
+      .single();
+
+    if (error) {
+      console.log("Edit post error:", error.message);
+      return {
+        success: false,
+        message: "Failed to update post.",
+      };
+    }
+
+    revalidatePath("/home");
+
+    return {
+      success: true,
+      data: data,
+      message: "Post updated successfully!",
+    };
+  } catch (error) {
+    console.log("Edit post server action error");
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        message: "Invalid content for post edit.",
+      };
+    }
+
+    return {
+      success: false,
+      message: "Internal Server Error during post edit.",
     };
   }
 }

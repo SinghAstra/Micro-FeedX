@@ -11,6 +11,7 @@ import {
 import { Post } from "@/interfaces/post";
 import { cn } from "@/lib/utils";
 import {
+  Edit,
   Heart,
   MessageCircle,
   MoreHorizontal,
@@ -24,11 +25,14 @@ import { useToastContext } from "../providers/toast";
 interface PostCardProps {
   post: Post;
   onPostDeleted: (postId: string) => void;
+  onEdit: (postId: string, newContent: string) => Promise<void>;
 }
 
-export function PostCard({ post, onPostDeleted }: PostCardProps) {
+export function PostCard({ post, onPostDeleted, onEdit }: PostCardProps) {
   const [likes, setLikes] = useState(post.likes);
   const [isLiked, setIsLiked] = useState(post.isLiked);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(post.content);
   const { setToastMessage } = useToastContext();
 
   const handleLike = async () => {
@@ -37,6 +41,7 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
 
     try {
       const result = await toggleLike(post.id);
+      console.log("result is ", result);
       if (result.likes && result.isLiked) {
         setLikes(result.likes);
         setIsLiked(result.isLiked);
@@ -68,24 +73,37 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
     }
   };
 
+  const handleSaveEdit = async () => {
+    if (editedContent.trim() === "") {
+      setToastMessage("Post content cannot be empty.");
+      return;
+    }
+    if (editedContent === post.content) {
+      setIsEditing(false);
+      return;
+    }
+    onEdit(post.id, editedContent);
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedContent(post.content);
+    setIsEditing(false);
+  };
+
   const formatDate = (dateString: string) => {
     const sanitizedDateString = dateString.replace(/\+00:00$/, "Z");
-
     const date = new Date(sanitizedDateString);
-
     if (isNaN(date.getTime())) {
       return "Invalid Date";
     }
-
     const now = new Date();
     const diffInHours = Math.floor(
       (now.getTime() - date.getTime()) / (1000 * 60 * 60)
     );
-
     if (diffInHours < 1) return "Just now";
     if (diffInHours < 24) return `${diffInHours}h`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d`;
-
     return date.toLocaleDateString();
   };
 
@@ -112,50 +130,92 @@ export function PostCard({ post, onPostDeleted }: PostCardProps) {
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className=" rounded">
+                <DropdownMenuItem
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1 cursor-pointer px-3 py-2 text-sm text-foreground hover:bg-accent focus:bg-accent rounded-md transition-colors duration-200"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleDelete}
-                  className="text-destructive"
+                  className="text-destructive cursor-pointer transition-all duration-300"
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-4 h-4 mr-1" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
-        <p className="text-sm mb-3 leading-relaxed">{post.content}</p>
-        <div className="flex items-center gap-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            className={cn(
-              "h-8 px-2 gap-2 text-muted-foreground hover:text-red-500",
-              isLiked && "text-red-500"
-            )}
-          >
-            <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
-            <span className="text-xs">{likes}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 gap-2 text-muted-foreground hover:text-blue-500"
-            disabled={true}
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span className="text-xs">Reply</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={true}
-            className="h-8 px-2 gap-2 text-muted-foreground hover:text-green-500"
-          >
-            <Share className="w-4 h-4" />
-            <span className="text-xs">Share</span>
-          </Button>
+        {isEditing ? (
+          <div className="mt-2">
+            <textarea
+              className="w-full resize-none bg-transparent p-2 border border-input rounded focus-visible:outline-none focus-visible:ring-0 text-sm"
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              rows={4}
+              maxLength={280}
+            />
+          </div>
+        ) : (
+          <p className="text-sm mb-3 leading-relaxed text-foreground">
+            {post.content}
+          </p>
+        )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLike}
+              className={cn(
+                "h-8 px-2 gap-2 text-muted-foreground hover:text-red-500",
+                isLiked && "text-red-500"
+              )}
+            >
+              <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
+              <span className="text-xs">{likes}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 gap-2 text-muted-foreground hover:text-blue-500"
+              disabled={true}
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="text-xs">Reply</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={true}
+              className="h-8 px-2 gap-2 text-muted-foreground hover:text-green-500"
+            >
+              <Share className="w-4 h-4" />
+              <span className="text-xs">Share</span>
+            </Button>
+          </div>
+
+          {isEditing && (
+            <div className="flex justify-end gap-2 mt-2">
+              <Button
+                onClick={handleCancelEdit}
+                variant="ghost"
+                className="px-4 py-2 text-sm rounded font-normal"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEdit}
+                className="px-4 py-2 text-sm rounded font-normal"
+                disabled={editedContent.trim() === ""}
+              >
+                Save
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

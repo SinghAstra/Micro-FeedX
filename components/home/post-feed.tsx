@@ -13,6 +13,7 @@ interface PostFeedProps {
   isLoadingMore: boolean;
   query: string;
   onPostDeleted: (postId: string) => void;
+  onPostEdited: (postId: string, newContent: string) => Promise<void>;
 }
 
 export function PostFeed({
@@ -22,6 +23,7 @@ export function PostFeed({
   isLoadingMore,
   query,
   onPostDeleted,
+  onPostEdited,
 }: PostFeedProps) {
   console.log("posts.length is ", posts.length);
 
@@ -69,7 +71,11 @@ export function PostFeed({
           key={post.id}
           ref={index === posts.length - 1 ? lastPostRef : null}
         >
-          <PostCard post={post} onPostDeleted={onPostDeleted} />
+          <PostCard
+            post={post}
+            onPostDeleted={onPostDeleted}
+            onEdit={onPostEdited}
+          />
         </div>
       ))}
 

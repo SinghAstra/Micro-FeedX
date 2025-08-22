@@ -1,6 +1,7 @@
 "use client";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
+import { Post } from "@/interfaces/post";
 import { cn } from "@/lib/utils";
 import { scaleInVariant } from "@/lib/variants";
 import type { User } from "@supabase/supabase-js";
@@ -13,9 +14,10 @@ import CreatePostDialog from "./create-post-dialog";
 
 interface NavbarProps {
   user: User;
+  onPostCreated: (newPost: Post) => void;
 }
 
-export function Navbar({ user }: NavbarProps) {
+export function Navbar({ user, onPostCreated }: NavbarProps) {
   const [showCreatePostDialog, setShowCreatePostDialog] = useState(false);
 
   return (
@@ -46,6 +48,7 @@ export function Navbar({ user }: NavbarProps) {
       <CreatePostDialog
         showCreatePostDialog={showCreatePostDialog}
         setShowCreatePostDialog={setShowCreatePostDialog}
+        onPostCreated={onPostCreated}
       />
     </>
   );

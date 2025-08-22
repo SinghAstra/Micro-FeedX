@@ -1,6 +1,5 @@
 import { getPosts } from "@/actions/posts";
 import { getAuthData } from "@/actions/server-auth";
-import { Navbar } from "@/components/home/navbar";
 import { Post } from "@/interfaces/post";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -43,17 +42,15 @@ const HomePage = async ({ searchParams }: HomePageProps) => {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col px-4">
-      <Navbar user={user} />
-      <HomeClientPage
-        initialPosts={posts}
-        initialCursor={nextCursor}
-        initialHasMore={hasMore}
-        initialQuery={queryParam || ""}
-        initialFilter={filterParam || "all"}
-        initialMessage={message}
-      />
-    </div>
+    <HomeClientPage
+      user={user}
+      initialPosts={posts}
+      initialCursor={nextCursor}
+      initialHasMore={hasMore}
+      initialQuery={queryParam || ""}
+      initialFilter={filterParam || "all"}
+      initialMessage={message}
+    />
   );
 };
 

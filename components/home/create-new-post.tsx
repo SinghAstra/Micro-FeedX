@@ -1,17 +1,16 @@
-// CreateNewPost.tsx
 "use client";
 
-import { createPost } from "@/actions/posts"; // Reverted to alias import
-import { useToastContext } from "@/components/providers/toast"; // Reverted to alias import
-import { Button } from "@/components/ui/button"; // Reverted to alias import
-import { Textarea } from "@/components/ui/textarea"; // Reverted to alias import
-import { Post } from "@/interfaces/post"; // Reverted to alias import and added import for Post interface
-import { cn } from "@/lib/utils"; // Reverted to alias import
+import { createPost } from "@/actions/posts";
+import { useToastContext } from "@/components/providers/toast";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Post } from "@/interfaces/post";
+import { cn } from "@/lib/utils";
 import type React from "react";
 import { useRef, useState } from "react";
 
 interface CreateNewPostProps {
-  onPostCreated?: (newPost: Post) => void; // Callback now expects newPost
+  onPostCreated: (newPost: Post) => void;
 }
 
 function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
@@ -32,7 +31,7 @@ function CreateNewPost({ onPostCreated }: CreateNewPostProps) {
       const result = await createPost(content.trim());
       if (result.success && result.newPost) {
         setContent("");
-        onPostCreated?.(result.newPost);
+        onPostCreated(result.newPost);
       }
       if (result.message) {
         setToastMessage(result.message);
